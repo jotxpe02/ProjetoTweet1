@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>SpringTweet - Frontend Simples</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    input, select { margin: 4px; }
+    section { margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; }
+    pre { background: #f7f7f7; padding: 10px; }
+  </style>
+</head>
+<body>
+  <h1>SpringTweet - Frontend Simples</h1>
+
+  <section>
+    <h2>Cadastrar Usuário</h2>
+    <input id="screenName" placeholder="Nome de tela">
+    <input id="password" placeholder="Senha">
+    <input id="profileImage" placeholder="URL imagem (opcional)">
+    <input id="bio" placeholder="Biografia">
+    <select id="role">
+      <option value="USER">USER</option>
+      <option value="ADMIN">ADMIN</option>
+    </select>
+    <button onclick="createUser()">Criar usuário</button>
+  </section>
+
+  <section>
+    <h2>Usuários</h2>
+    <button onclick="listUsers()">Listar Usuários</button>
+    <pre id="usersOutput"></pre>
+  </section>
+
+  <section>
+    <h2>Criar Tweet</h2>
+    <select id="authorSelect"></select>
+    <input id="tweetContent" placeholder="Conteúdo do tweet">
+    <button onclick="createTweet()">Postar</button>
+  </section>
+
+  <section>
+    <h2>Tweets</h2>
+    <button onclick="listTweets()">Listar Tweets</button>
+    <pre id="tweetsOutput"></pre>
+  </section>
+
+<script>
+const API = '/api';
+
+async function createUser() {
+  const body = {
+    screenName: document.getElementById('screenName').value,
+    password: document.getElementById('password').value,
+    profileImage: document.getElementById('profileImage').value,
+    bio: document.getElementById('bio').value,
+    role: document.getElementById('role').value
+  };
+  const res = await fetch(API + '/users', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  alert('Status: ' + res.status);
+  await listUsers();
+  await populateAuthors();
+}
+
+async function listUsers() {
+  const res = await fetch(API + '/users');
+  const data = await res.json();
+  document.getElementById('usersOutput').innerText = JSON.stringify(data, null, 2);
+}
+
+async function populateAuthors() {
+  const res = await fetch(API + '/users');
+  const users = await res.json();
+  const sel = document.getElementById('authorSelect');
+  sel.innerHTML = '';
+  users.forEach(u => {
+    const opt = document.createElement('option');
+    opt.value = u.id;
+    opt.innerText = u.screenName + ' (id:' + u.id + ')';
+    sel.appendChild(opt);
+  });
+}
+
+async function createTweet() {
+  const authorId = parseInt(document.getElementById('authorSelect').value);
+  const content = document.getElementById('tweetContent').value;
+  const body = { content: content, tweetUser: { id: authorId } };
+  const res = await fetch(API + '/tweets', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  alert('Status: ' + res.status);
+  await listTweets();
+}
+
+async function listTweets() {
+  const res = await fetch(API + '/tweets');
+  const data = await res.json();
+  document.getElementById('tweetsOutput').innerText = JSON.stringify(data, null, 2);
+}
+
+// populate on load
+populateAuthors();
+listUsers();
+listTweets();
+</script>
+
+</body>
+</html>
